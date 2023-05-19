@@ -9,7 +9,7 @@ db_user: postgres
 filename: 
 fillenamefinal: 
 table_names: null
-headers: {'Authorization': 'Basic anJtaXJvbkBlY29tdW5kby5ldTpFY29Tb3VuZDIxNSo=','Content-Type': 'application/json'}
+headers: {'Authorization': 
 AccessKeyId: 
 SecretAccessKey: 
 S3BucketName: 
