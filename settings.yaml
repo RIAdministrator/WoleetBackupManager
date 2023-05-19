@@ -1,0 +1,17 @@
+backup_path: .
+anchor_id: 
+db_host: 
+db_name: 
+db_password: 
+db_port: 
+hash_dump: 
+db_user: 
+filename: 
+fillenamefinal: 
+table_names: null
+headers: 
+AccessKeyId: 
+SecretAccessKey: 
+S3BucketName: 
+ 
+
