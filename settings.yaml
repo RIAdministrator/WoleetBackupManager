@@ -1,15 +1,15 @@
 backup_path: .
-anchor_id: 
-db_host: 
-db_name: 
-db_password: 
-db_port: 
+anchor_id: 1cbe65c5-b627-4aa9-9553-b8ea7bc6e804
+db_host: 192.168.100.250
+db_name: postgres 
+db_password: mysecretpassword 
+db_port: 5432
 hash_dump: 
-db_user: 
+db_user: postgres
 filename: 
 fillenamefinal: 
 table_names: null
-headers: 
+headers: {'Authorization': 'Basic anJtaXJvbkBlY29tdW5kby5ldTpFY29Tb3VuZDIxNSo=','Content-Type': 'application/json'}
 AccessKeyId: 
 SecretAccessKey: 
 S3BucketName: 
