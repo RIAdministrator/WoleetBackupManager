@@ -10,16 +10,19 @@ import sched
 import time
 import boto3
 import zipfile
+import pkg_resources
+import subprocess
+
 
 def main():
     yaml_file = open("settings.yaml", 'r')
     settings = yaml.load(yaml_file,Loader=SafeLoader)
     anchor_id = settings["anchor_id"]
-    if (anchor_id == ''):
+    if anchor_id is None or anchor_id == '':
         #Applé la fonction Create essentiels qui recupere les valeur des varuiables (la fonction create_essentials donne les valeures aux variables)
-        command_str,filename,backup_path = create_essentials()
+        command_str,filename,backup_path,env = create_essentials()
         #Applé la fonction backup database (la fonction backup_database prend des paramaitres )
-        backup_database(command_str)# tablenames optionel 
+        backup_database(command_str,env)# tablenames optionel 
         #applé la fonction hashsha256_database (la fonction hashsh-a256_database donne une valeur a la variable hashDump et prend la valeur de la variable filename depuis main)
         hashDump = hashsha256_database(filename)
         #renommer le fichier dump en hach + filename + .tar et retouner la nom final stocker dan la variable fillenamefinal
@@ -32,7 +35,8 @@ def main():
             if statutCheckAnchor():
                 break  # Stop running if the condition is True
             # Wait for 6 hours
-            time.sleep(6 * 60 * 60)
+            time.sleep(2)
+            print('wait')
         # on continue ici
         downloadCertificat()
         saveToS3()     
@@ -49,19 +53,30 @@ def create_essentials():
     db_port = settings["db_port"]
     backup_path = settings["backup_path"]
     filename = settings["filename"]
-    filename = filename + "-" + strftime("%Y%m%d")
+    filename = filename + "_" + strftime("%Y%m%d") + ".tar"
     #concatiner les variables de la DB
-    command_str = "PGPASSWORD="+str(db_password)+" pg_dump -h "+str(db_host)+" -p "+str(db_port) + " -d "
-    +db_name+" -U "+db_user + " -F t --no-owner --no-acl --dbname=" +str(db_name)
-    +" --data-only --schema=public > " + str(filename+".tar")
-    return command_str,filename,backup_path
+
+    # Set the environment variable for PGPASSWORD
+    env = dict(os.environ, PGPASSWORD="mysecretpassword")
+
+    # Construct the command
+    command_str = (
+        'pg_dump -h {host} -p {port} -U {username} -F t --no-owner --no-acl --dbname={database} --data-only --schema=public -f {output_file}'
+    ).format(
+        host=db_host,
+        port=db_port,
+        username=db_user,
+        database=db_name,
+        output_file=filename
+    )
+    
+    return command_str,filename,backup_path,env
 
 #dump db 
-def backup_database(command_str=None):
+def backup_database(command_str=None,env=None):
+    
     try:
-        #test
-        print(command_str)
-        #os.system(command_str)
+        subprocess.run(command_str, env=env)
         print("Backup completed")
     except Exception as e:
         print ("!!Problem occured!!")
@@ -77,28 +92,31 @@ def hashsha256_database(filename=None):
     return hashDump
 
 def renameDumpToHash(filename=None,hashDump=None,backup_path=None): #filename in old name file
-    fillenamefinal = hashDump + "-" + filename
-    os.rename(os.path.join(backup_path, filename), os.path.join(backup_path, fillenamefinal))
-    return fillenamefinal 
+    filenamefinal = hashDump + "_" + filename
+    os.rename(os.path.join(backup_path, filename), os.path.join(backup_path, filenamefinal))
+    return filenamefinal 
 
 # interogate  to wolett + retun id
 
 def interogateToWoleet(hashDump=None,fillenamefinal=None):  
     yaml_file = open("settings.yaml", 'r')
     settings = yaml.load(yaml_file,Loader=SafeLoader)
-    headers = settings["headers"]
-
+    token = settings["token"]
+    #token = "Basic " + token
     url = "https://api.woleet.io/v1/anchor"
 
     payload = {
     "name": fillenamefinal,
     "hash": hashDump
     }
-
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": token
+    }
     response = requests.post(url, json=payload, headers=headers)
     json_object = json.loads(response.text)
     anchor_id = json_object["id"]
-    print(json_object["id"]) 
     return anchor_id
 
 def SaveAnchorIdInSettings(anchor_id=None):
@@ -153,7 +171,12 @@ def statutCheckAnchor():
     yaml_file = open("settings.yaml", 'r')
     settings = yaml.load(yaml_file,Loader=SafeLoader)
     anchor_id = settings["anchor_id"]
-    headers = settings["headers"]
+    token = settings["token"]
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": token
+    }
 
     # Set the URL of the Woleet API endpoint for retrieving the status of a certificate by ID
     url = f'https://api.woleet.io/v1/anchor/{anchor_id}'
@@ -176,7 +199,12 @@ def downloadCertificat():
     settings = yaml.load(yaml_file,Loader=SafeLoader)
     anchor_id = settings["anchor_id"]
     fillenamefinal = settings["hash_dump"]
-    headers = settings["headers"]
+    token = settings["token"]
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": token
+    }
     # Configure API endpoint and certificate ID
     api_endpoint = f'https://api.woleet.io/v1/anchor/{anchor_id}/attestation'
 
@@ -212,5 +240,7 @@ def saveToS3():
     # Store the blob to S3
     s3.Bucket(S3BucketName).upload_file(Filename=certificat, Key=certificat)
     s3.Bucket(S3BucketName).upload_file(Filename=dump, Key=dump)
+
+
 
 main()
