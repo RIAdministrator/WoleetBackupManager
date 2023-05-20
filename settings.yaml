@@ -1,9 +1,9 @@
 backup_path: .
 anchor_id: 
-db_host: 192.168.100.250
+db_host: 
 db_name: 
 db_password: 
-db_port: 5432
+db_port:
 hash_dump: 
 db_user: 
 filename: 
