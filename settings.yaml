@@ -3,13 +3,13 @@ S3BucketName:
 SecretAccessKey: 
 anchor_id: 
 backup_path: .
-db_host: 192.168.100.250
-db_name: postgres
-db_password: mysecretpassword
+db_host: 
+db_name: 
+db_password: 
 db_port: 5432
-db_user: postgres
+db_user: 
 filename: db_backup
-filenamefinal: null
+filenamefinal: 
 fillenamefinal: 
 hash_dump: 
 token: 
