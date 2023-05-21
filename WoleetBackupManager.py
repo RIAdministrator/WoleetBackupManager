@@ -35,9 +35,9 @@ def main():
             if statutCheckAnchor():
                 break  # Stop running if the condition is True
             # Wait for 6 hours
-            time.sleep(2)
+            time.sleep(6*60*60)
             print('wait')
-        # on continue ici
+        
         downloadCertificat()
         saveToS3()     
         #when you get true from statutCheck you should download the certifcat
